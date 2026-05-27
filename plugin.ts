@@ -28,12 +28,15 @@ function toConfigKey(id: string): string {
 export default async function commandcodePlugin() {
   return {
     config: async (config: Record<string, unknown>) => {
-      const providers = config.provider as Record<string, Record<string, unknown>> | undefined
+      let providers = config.provider as Record<string, Record<string, unknown>> | undefined;
       if (!providers) {
-        (config as Record<string, unknown>).provider = { commandcode: {} }
+        providers = {};
+        (config as Record<string, unknown>).provider = providers;
       }
-      const cc = ((config as Record<string, unknown>).provider as Record<string, Record<string, unknown>>)?.commandcode as Record<string, unknown> | undefined
-      if (!cc) return
+      if (!providers.commandcode) {
+        providers.commandcode = {};
+      }
+      const cc = providers.commandcode as Record<string, unknown>;
 
       if (!cc.npm) cc.npm = "commandcode-go-opencode-provider"
       if (!cc.name) cc.name = "Command Code"
@@ -67,6 +70,15 @@ export default async function commandcodePlugin() {
         {
           type: "api",
           label: "API Key",
+          prompts: [
+            {
+              type: "text",
+              key: "key",
+              message: "API Key",
+              placeholder: "Enter your Command Code API key",
+              validate: (value: string) => value.trim() ? undefined : "API key is required",
+            },
+          ],
           authorize: async (inputs: Record<string, unknown> | undefined) => {
             const rawKey = inputs?.key
             if (typeof rawKey !== "string") return { type: "failed" as const }

@@ -2,6 +2,46 @@
 
 [Command Code](https://commandcode.ai) API provider for [opencode](https://opencode.ai). Use Claude, GPT, Gemini, DeepSeek, Qwen, Kimi, GLM, MiniMax, Step, and other models through a single API key.
 
+## Patched Local Usage (Until Official Fix)
+
+This fork contains critical fixes for two issues:
+1. **"Failed to authorize"** error during `/connect` (added missing prompts array to capture the API key input).
+2. **Startup Crash** (`JSON Parse error: Unexpected identifier "undefined"`) when logged in (ensured provider registration always occurs robustly even if not configured in the workspace `opencode.json`).
+
+To use this patched version in OpenCode:
+
+### 1. Clone the Patched Repository
+Clone this repository to a local directory:
+```bash
+git clone https://github.com/MiloudiMohamed/opencode-commandcode-provider.git /path/to/opencode-commandcode-provider
+```
+
+### 2. Configure Global `opencode.json`
+Add the file URL of the patched `plugin.ts` to your global `~/.config/opencode/opencode.json` (replacing any NPM package reference):
+
+```json
+{
+  "plugin": [
+    "file:///path/to/opencode-commandcode-provider/plugin.ts"
+  ]
+}
+```
+
+### 3. Avoid NPM Package Overrides
+If you have a workspace-local `opencode.json` that lists `"commandcode-go-opencode-provider"` in its `plugin` array, remove it or set it to `[]` so it doesn't override the patched local plugin:
+```json
+{
+  "plugin": []
+}
+```
+
+### 4. Login and Run
+Restart OpenCode, and run:
+```bash
+opencode providers login -p commandcode
+```
+Enter your Command Code API key when prompted. OpenCode will now start up and run models successfully without crashes!
+
 ## Quick Start
 
 ### 1. Install
