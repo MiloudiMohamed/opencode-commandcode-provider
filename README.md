@@ -102,6 +102,7 @@ COMMANDCODE_API_KEY=your-key opencode
 |---|---|---|---|---|
 | `claude-haiku-4-5-20251001`                | Claude Haiku 4.5            | premium      | no  | 200K   |
 | `claude-opus-4-7`                          | Claude Opus 4.7             | premium      | yes | 1M     |
+| `claude-opus-4-8`                          | Claude Opus 4.8             | premium      | yes | 1M     |
 | `claude-sonnet-4-6`                        | Claude Sonnet 4.6           | premium      | yes | 1M     |
 | `gpt-5.3-codex`                            | GPT-5.3 Codex               | premium      | yes | 400K   |
 | `gpt-5.4`                                  | GPT-5.4                     | premium      | yes | 400K   |
@@ -115,12 +116,18 @@ COMMANDCODE_API_KEY=your-key opencode
 | `zai-org/GLM-5.1`                          | GLM-5.1                     | open-source  | no  | 200K   |
 | `moonshotai/Kimi-K2.5`                     | Kimi K2.5                   | open-source  | no  | 256K   |
 | `moonshotai/Kimi-K2.6`                     | Kimi K2.6                   | open-source  | no  | 256K   |
+| `xiaomi/mimo-v2.5`                         | MiMo V2.5                   | open-source  | no  | 1M     |
+| `xiaomi/mimo-v2.5-pro`                     | MiMo V2.5 Pro               | open-source  | no  | 1M     |
 | `MiniMaxAI/MiniMax-M2.5`                   | MiniMax M2.5                | open-source  | no  | 200K   |
 | `MiniMaxAI/MiniMax-M2.7`                   | MiniMax M2.7                | open-source  | no  | 1M     |
+| `MiniMaxAI/MiniMax-M3`                     | MiniMax M3                  | open-source  | yes | 1M     |
 | `Qwen/Qwen3.6-Max-Preview`                 | Qwen 3.6 Max Preview        | open-source  | yes | 1M     |
 | `Qwen/Qwen3.6-Plus`                        | Qwen 3.6 Plus               | open-source  | yes | 1M     |
 | `Qwen/Qwen3.7-Max`                         | Qwen 3.7 Max                | open-source  | yes | 1M     |
+| `Qwen/Qwen3.7-Max-Free`                    | Qwen 3.7 Max (Free)         | open-source  | yes | 1M     |
+| `Qwen/Qwen3.7-Plus`                        | Qwen 3.7 Plus               | open-source  | yes | 1M     |
 | `stepfun/Step-3.5-Flash`                   | Step 3.5 Flash              | open-source  | yes | 1M     |
+| `stepfun/Step-3.7-Flash`                   | Step 3.7 Flash              | open-source  | yes | 256K   |
 
 Full model list is maintained in [`models.json`](./models.json). Run `bun run sync` to refresh from the latest Command Code CLI release on npm.
 

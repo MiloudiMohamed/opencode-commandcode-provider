@@ -1,7 +1,11 @@
 import { readFileSync, writeFileSync } from "fs"
-import { join } from "path"
+import { join, dirname } from "path"
+import { fileURLToPath } from "url"
 
-const ROOT = join(import.meta.dir, "..")
+const __dirname = typeof import.meta.dir === "string"
+  ? import.meta.dir
+  : dirname(fileURLToPath(import.meta.url))
+const ROOT = join(__dirname, "..")
 const MODELS_JSON = join(ROOT, "models.json")
 const README = join(ROOT, "README.md")
 

@@ -1,9 +1,13 @@
 import { readFileSync, writeFileSync, existsSync, mkdirSync, rmSync } from "fs"
-import { join } from "path"
+import { join, dirname } from "path"
 import { homedir } from "os"
 import { execSync } from "child_process"
+import { fileURLToPath } from "url"
 
-const PROJECT_ROOT = join(import.meta.dir, "..")
+const __dirname = typeof import.meta.dir === "string"
+  ? import.meta.dir
+  : dirname(fileURLToPath(import.meta.url))
+const PROJECT_ROOT = join(__dirname, "..")
 const MODELS_JSON = join(PROJECT_ROOT, "models.json")
 const GLOBAL_CONFIG = join(homedir(), ".config", "opencode", "opencode.jsonc")
 const NPM_PACKAGE = "command-code"
@@ -47,18 +51,26 @@ const FALLBACK_COSTS: Record<string, { input: number; output: number; cache_read
   "deepseek/deepseek-v4-flash": { input: 0.14, output: 0.28, cache_read: 0.01 },
   "zai-org/GLM-5.1": { input: 1.4, output: 4.4, cache_read: 0.26 },
   "MiniMaxAI/MiniMax-M2.7": { input: 0.3, output: 1.2, cache_read: 0.06 },
+  "MiniMaxAI/MiniMax-M3": { input: 0.3, output: 1.2, cache_read: 0.06 },
   "Qwen/Qwen3.6-Max-Preview": { input: 1.3, output: 7.8, cache_read: 0.26, cache_write: 1.63 },
   "Qwen/Qwen3.6-Plus": { input: 0.5, output: 3, cache_read: 0.1 },
   "Qwen/Qwen3.7-Max": { input: 1.25, output: 3.75, cache_read: 0.25, cache_write: 1.56 },
+  "Qwen/Qwen3.7-Max-Free": { input: 0, output: 0 },
+  "Qwen/Qwen3.7-Plus": { input: 0.4, output: 1.2, cache_read: 0.08 },
   "stepfun/Step-3.5-Flash": { input: 0.1, output: 0.3, cache_read: 0.02 },
+  "stepfun/Step-3.7-Flash": { input: 0.1, output: 0.3, cache_read: 0.02 },
   "google/gemini-3.5-flash": { input: 1.5, output: 9, cache_read: 0.15 },
   "google/gemini-3.1-flash-lite": { input: 0.25, output: 1.5, cache_read: 0.03 },
+  "claude-opus-4-8": { input: 15, output: 75, cache_read: 1.5, cache_write: 18.75 },
+  "xiaomi/mimo-v2.5-pro": { input: 0.5, output: 1.5 },
+  "xiaomi/mimo-v2.5": { input: 0.1, output: 0.3 },
 }
 
 const FALLBACK_LIMITS: Record<string, { context: number; output: number }> = {
   "claude-haiku-4-5-20251001": { context: 200000, output: 8192 },
   "claude-opus-4-6": { context: 200000, output: 32000 },
   "claude-opus-4-7": { context: 200000, output: 32000 },
+  "claude-opus-4-8": { context: 200000, output: 32000 },
   "claude-sonnet-4-6": { context: 200000, output: 16000 },
   "gpt-5.5": { context: 256000, output: 128000 },
   "gpt-5.4": { context: 256000, output: 128000 },
@@ -70,14 +82,20 @@ const FALLBACK_LIMITS: Record<string, { context: number; output: number }> = {
   "zai-org/GLM-5.1": { context: 200000, output: 131072 },
   "MiniMaxAI/MiniMax-M2.5": { context: 1000000, output: 131072 },
   "MiniMaxAI/MiniMax-M2.7": { context: 1000000, output: 131072 },
+  "MiniMaxAI/MiniMax-M3": { context: 1000000, output: 131072 },
   "deepseek/deepseek-v4-pro": { context: 1000000, output: 384000 },
   "deepseek/deepseek-v4-flash": { context: 1000000, output: 384000 },
   "Qwen/Qwen3.6-Max-Preview": { context: 1000000, output: 131072 },
   "Qwen/Qwen3.6-Plus": { context: 1000000, output: 131072 },
   "Qwen/Qwen3.7-Max": { context: 1000000, output: 131072 },
+  "Qwen/Qwen3.7-Max-Free": { context: 1000000, output: 131072 },
+  "Qwen/Qwen3.7-Plus": { context: 1000000, output: 131072 },
   "stepfun/Step-3.5-Flash": { context: 1000000, output: 131072 },
+  "stepfun/Step-3.7-Flash": { context: 1000000, output: 131072 },
   "google/gemini-3.5-flash": { context: 1000000, output: 65536 },
   "google/gemini-3.1-flash-lite": { context: 1000000, output: 65536 },
+  "xiaomi/mimo-v2.5-pro": { context: 1000000, output: 131072 },
+  "xiaomi/mimo-v2.5": { context: 1000000, output: 131072 },
 }
 
 const HARDCODED_EXTRAS: SnEntry[] = [
@@ -195,11 +213,24 @@ function extractModelCatalog(
   wtName: string,
   spec: ReturnType<typeof extractSpecConstants>,
 ): Record<string, SnEntry> {
-  const raw = findBalancedObject(source, 'SONNET_4_6:{id:"claude-sonnet-4-6"')
+  const anchorIdx = source.indexOf('SONNET_4_6:{id:"claude-sonnet-4-6"')
+  if (anchorIdx < 0) throw new Error("Could not find model catalog anchor")
+
+  const before = source.slice(Math.max(0, anchorIdx - 5000), anchorIdx)
   const ctx: Record<string, unknown> = { [wtName]: wt }
+
+  // Extract all variable string assignments before the catalog and inject into context
+  const regex = /\b([a-zA-Z0-9_$]+)\s*=\s*"([^"]+)"/g
+  let match
+  while ((match = regex.exec(before)) !== null) {
+    ctx[match[1]] = match[2]
+  }
+
   ctx[spec.chatComplete] = "chatComplete"
   ctx[spec.responses] = "responses"
   if (spec.qt) ctx[spec.qt] = wt.VERCEL_AI_GATEWAY
+
+  const raw = findBalancedObject(source, 'SONNET_4_6:{id:"claude-sonnet-4-6"')
   return evaluateWithContext(normalizeForEval(raw), ctx)
 }
 
@@ -292,7 +323,9 @@ function buildModelEntry(
 
   return {
     id: entry.id,
-    name: entry.name,
+    name: entry.id.endsWith("-Free") && !entry.name.includes("Free")
+      ? `${entry.name} (Free)`
+      : entry.name,
     tier,
     reasoning: entry.reasoning || (entry.reasoningEfforts?.length ?? 0) > 0,
     tool_call: true,
