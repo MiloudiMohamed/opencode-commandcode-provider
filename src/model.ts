@@ -1,3 +1,6 @@
+import { readFileSync, existsSync } from "fs"
+import { dirname, join } from "path"
+import { fileURLToPath } from "url"
 import type {
   LanguageModelV3,
   LanguageModelV3CallOptions,
@@ -11,13 +14,25 @@ import { buildRequest } from "./convert.js"
 import { parseStreamEvents } from "./stream.js"
 
 const DEFAULT_BASE_URL = "https://api.commandcode.ai"
-// x-command-code-version must match the Command Code CLI version for API compatibility
-const CC_VERSION = "0.26.20"
+
+function loadCCVersion(): string {
+  try {
+    const projectRoot = dirname(fileURLToPath(import.meta.url))
+    const versionPath = join(projectRoot, "..", "version.json")
+    if (!existsSync(versionPath)) return "0.26.20"
+    const data = JSON.parse(readFileSync(versionPath, "utf-8"))
+    if (typeof data?.version === "string") return data.version
+    return "0.26.20"
+  } catch {
+    return "0.26.20"
+  }
+}
 
 export interface CommandCodeModelOptions {
   apiKey: string
   baseURL?: string
   headers?: Record<string, string>
+  ccVersion?: string
 }
 
 export class CommandCodeLanguageModel implements LanguageModelV3 {
@@ -37,11 +52,15 @@ export class CommandCodeLanguageModel implements LanguageModelV3 {
     return this.opts.baseURL ?? DEFAULT_BASE_URL
   }
 
+  private get ccVersion(): string {
+    return this.opts.ccVersion ?? loadCCVersion()
+  }
+
   private buildHeaders(): Record<string, string> {
     return {
       "Content-Type": "application/json",
       Authorization: `Bearer ${this.opts.apiKey}`,
-      "x-command-code-version": CC_VERSION,
+      "x-command-code-version": this.ccVersion,
       "x-cli-environment": "production",
       "x-project-slug": "opencode",
       ...this.opts.headers,

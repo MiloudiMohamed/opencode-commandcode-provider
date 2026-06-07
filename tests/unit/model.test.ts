@@ -5,10 +5,11 @@ import { mockFetchTrack, mockFetchError, mockFetchStream, makeCallOptions } from
 const MODEL_ID = "test-model"
 const API_KEY = "sk-test-key"
 
-function makeModel(baseURL?: string) {
+function makeModel(baseURL?: string, extra?: { ccVersion?: string }) {
   return new CommandCodeLanguageModel(MODEL_ID, {
     apiKey: API_KEY,
     baseURL,
+    ccVersion: extra?.ccVersion ?? "0.26.20",
   })
 }
 

@@ -475,6 +475,10 @@ async function main() {
   console.log(`\nWriting ${MODELS_JSON} with ${entries.length} models...`)
   writeFileSync(MODELS_JSON, JSON.stringify(entries, null, 2) + "\n", "utf-8")
 
+  const versionPath = join(PROJECT_ROOT, "version.json")
+  writeFileSync(versionPath, JSON.stringify({ version, updatedAt: new Date().toISOString() }, null, 2) + "\n", "utf-8")
+  console.log(`Writing ${versionPath} (version ${version})...`)
+
   const modelsObj = generateOpencodeModels(entries)
 
   if (shouldUpdateGlobal) {
