@@ -64,6 +64,7 @@ const FALLBACK_COSTS: Record<string, { input: number; output: number; cache_read
   "claude-opus-4-8": { input: 15, output: 75, cache_read: 1.5, cache_write: 18.75 },
   "xiaomi/mimo-v2.5-pro": { input: 0.5, output: 1.5 },
   "xiaomi/mimo-v2.5": { input: 0.1, output: 0.3 },
+  "nvidia/nemotron-3-ultra-550b-a55b": { input: 0.5, output: 2 },
 }
 
 const FALLBACK_LIMITS: Record<string, { context: number; output: number }> = {
@@ -96,6 +97,7 @@ const FALLBACK_LIMITS: Record<string, { context: number; output: number }> = {
   "google/gemini-3.1-flash-lite": { context: 1000000, output: 65536 },
   "xiaomi/mimo-v2.5-pro": { context: 1000000, output: 131072 },
   "xiaomi/mimo-v2.5": { context: 1000000, output: 131072 },
+  "nvidia/nemotron-3-ultra-550b-a55b": { context: 1000000, output: 131072 },
 }
 
 const HARDCODED_EXTRAS: SnEntry[] = [
@@ -106,6 +108,15 @@ const HARDCODED_EXTRAS: SnEntry[] = [
     label: "Qwen 3.7 Max",
     name: "Qwen 3.7 Max",
     description: "latest Qwen Max model",
+    reasoning: true,
+  },
+  {
+    id: "Qwen/Qwen3.7-Max-Free",
+    provider: "vercel-ai-gateway",
+    spec: "chatComplete",
+    label: "Qwen 3.7 Max (Free)",
+    name: "Qwen 3.7 Max (Free)",
+    description: "free tier of Qwen 3.7 Max",
     reasoning: true,
   },
 ]
@@ -197,7 +208,7 @@ function extractSpecConstants(source: string): { chatComplete: string; responses
   const respMatch = before.match(/([A-Za-z_$]+)="responses"/)
   if (!chatMatch || !respMatch) throw new Error("Could not find spec constants")
 
-  const qtMatch = before.match(/([A-Za-z_$]+)=Vt\[0\]/)
+  const qtMatch = before.match(/([A-Za-z_$]+)=\w+\[0\]/)
   const qtVar = qtMatch ? qtMatch[1] : null
 
   return {

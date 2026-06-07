@@ -335,6 +335,21 @@
     }
   },
   {
+    "id": "nvidia/nemotron-3-ultra-550b-a55b",
+    "name": "Nemotron 3 Ultra",
+    "tier": "open-source",
+    "reasoning": true,
+    "tool_call": true,
+    "cost": {
+      "input": 0.5,
+      "output": 2
+    },
+    "limit": {
+      "context": 1000000,
+      "output": 131072
+    }
+  },
+  {
     "id": "Qwen/Qwen3.6-Max-Preview",
     "name": "Qwen 3.6 Max Preview",
     "tier": "open-source",
