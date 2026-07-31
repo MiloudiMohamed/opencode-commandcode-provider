@@ -23,7 +23,7 @@ test("explicit apiKey takes priority over env var", () => {
 })
 
 test("returns undefined when no key found", () => {
-  const result = resolveApiKey({})
+  const result = resolveApiKey({ authPaths: [] })
   expect(result).toBeUndefined()
 })
 

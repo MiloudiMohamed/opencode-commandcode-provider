@@ -23,113 +23,6 @@ interface ModelEntry {
   limit: { context: number; output: number }
 }
 
-interface CostEntry {
-  id: string
-  provider: string
-  category: string
-  promptCost: number
-  completionCost: number
-  cacheWrite5mCost: number
-  cacheWrite1hCost: number
-  cacheHitCost: number
-}
-
-interface SnEntry {
-  id: string
-  provider: string
-  spec: string
-  label: string
-  name: string
-  description: string
-  reasoning?: boolean
-  reasoningEfforts?: string[]
-  contextWindow?: number
-}
-
-const FALLBACK_COSTS: Record<string, { input: number; output: number; cache_read?: number; cache_write?: number }> = {
-  "deepseek/deepseek-v4-pro": { input: 0.435, output: 0.87, cache_read: 0.003625 },
-  "deepseek/deepseek-v4-flash": { input: 0.14, output: 0.28, cache_read: 0.01 },
-  "zai-org/GLM-5.1": { input: 1.4, output: 4.4, cache_read: 0.26 },
-  "MiniMaxAI/MiniMax-M2.7": { input: 0.3, output: 1.2, cache_read: 0.06 },
-  "MiniMaxAI/MiniMax-M3": { input: 0.3, output: 1.2, cache_read: 0.06 },
-  "Qwen/Qwen3.6-Max-Preview": { input: 1.3, output: 7.8, cache_read: 0.26, cache_write: 1.63 },
-  "Qwen/Qwen3.6-Plus": { input: 0.5, output: 3, cache_read: 0.1 },
-  "Qwen/Qwen3.7-Max": { input: 1.25, output: 3.75, cache_read: 0.25, cache_write: 1.56 },
-  "Qwen/Qwen3.7-Max-Free": { input: 0, output: 0 },
-  "Qwen/Qwen3.7-Plus": { input: 0.4, output: 1.2, cache_read: 0.08 },
-  "stepfun/Step-3.5-Flash": { input: 0.1, output: 0.3, cache_read: 0.02 },
-  "stepfun/Step-3.7-Flash": { input: 0.1, output: 0.3, cache_read: 0.02 },
-  "google/gemini-3.5-flash": { input: 1.5, output: 9, cache_read: 0.15 },
-  "google/gemini-3.1-flash-lite": { input: 0.25, output: 1.5, cache_read: 0.03 },
-  "claude-opus-4-8": { input: 15, output: 75, cache_read: 1.5, cache_write: 18.75 },
-  "xiaomi/mimo-v2.5-pro": { input: 0.5, output: 1.5 },
-  "xiaomi/mimo-v2.5": { input: 0.1, output: 0.3 },
-  "nvidia/nemotron-3-ultra-550b-a55b": { input: 0.5, output: 2 },
-}
-
-const FALLBACK_LIMITS: Record<string, { context: number; output: number }> = {
-  "claude-haiku-4-5-20251001": { context: 200000, output: 8192 },
-  "claude-opus-4-6": { context: 200000, output: 32000 },
-  "claude-opus-4-7": { context: 200000, output: 32000 },
-  "claude-opus-4-8": { context: 200000, output: 32000 },
-  "claude-sonnet-4-6": { context: 200000, output: 16000 },
-  "gpt-5.5": { context: 256000, output: 128000 },
-  "gpt-5.4": { context: 256000, output: 128000 },
-  "gpt-5.3-codex": { context: 256000, output: 128000 },
-  "gpt-5.4-mini": { context: 256000, output: 128000 },
-  "moonshotai/Kimi-K2.6": { context: 262144, output: 131072 },
-  "moonshotai/Kimi-K2.5": { context: 262144, output: 131072 },
-  "zai-org/GLM-5": { context: 200000, output: 131072 },
-  "zai-org/GLM-5.1": { context: 200000, output: 131072 },
-  "MiniMaxAI/MiniMax-M2.5": { context: 1000000, output: 131072 },
-  "MiniMaxAI/MiniMax-M2.7": { context: 1000000, output: 131072 },
-  "MiniMaxAI/MiniMax-M3": { context: 1000000, output: 131072 },
-  "deepseek/deepseek-v4-pro": { context: 1000000, output: 384000 },
-  "deepseek/deepseek-v4-flash": { context: 1000000, output: 384000 },
-  "Qwen/Qwen3.6-Max-Preview": { context: 1000000, output: 131072 },
-  "Qwen/Qwen3.6-Plus": { context: 1000000, output: 131072 },
-  "Qwen/Qwen3.7-Max": { context: 1000000, output: 131072 },
-  "Qwen/Qwen3.7-Max-Free": { context: 1000000, output: 131072 },
-  "Qwen/Qwen3.7-Plus": { context: 1000000, output: 131072 },
-  "stepfun/Step-3.5-Flash": { context: 1000000, output: 131072 },
-  "stepfun/Step-3.7-Flash": { context: 1000000, output: 131072 },
-  "google/gemini-3.5-flash": { context: 1000000, output: 65536 },
-  "google/gemini-3.1-flash-lite": { context: 1000000, output: 65536 },
-  "xiaomi/mimo-v2.5-pro": { context: 1000000, output: 131072 },
-  "xiaomi/mimo-v2.5": { context: 1000000, output: 131072 },
-  "nvidia/nemotron-3-ultra-550b-a55b": { context: 1000000, output: 131072 },
-}
-
-const HARDCODED_EXTRAS: SnEntry[] = [
-  {
-    id: "Qwen/Qwen3.7-Max",
-    provider: "vercel-ai-gateway",
-    spec: "chatComplete",
-    label: "Qwen 3.7 Max",
-    name: "Qwen 3.7 Max",
-    description: "latest Qwen Max model",
-    reasoning: true,
-  },
-  {
-    id: "Qwen/Qwen3.7-Max-Free",
-    provider: "vercel-ai-gateway",
-    spec: "chatComplete",
-    label: "Qwen 3.7 Max (Free)",
-    name: "Qwen 3.7 Max (Free)",
-    description: "free tier of Qwen 3.7 Max",
-    reasoning: true,
-  },
-]
-
-const TIER_MAP: Record<string, "premium" | "open-source"> = {
-  "anthropic": "premium",
-  "openai": "premium",
-  "baseten": "open-source",
-  "vercel-ai-gateway": "open-source",
-  "openrouter": "open-source",
-  "cloudflare-ai-gateway": "open-source",
-}
-
 async function fetchLatestBundle(): Promise<{ source: string; version: string }> {
   console.log(`Fetching latest ${NPM_PACKAGE} metadata...`)
   const metaResp = await fetch(`https://registry.npmjs.org/${NPM_PACKAGE}/latest`)
@@ -152,197 +45,161 @@ async function fetchLatestBundle(): Promise<{ source: string; version: string }>
   console.log("Extracting...")
   execSync(`tar -xzf "${tgzPath}" -C "${TMP_DIR}"`, { stdio: "pipe" })
 
-  const bundlePath = join(TMP_DIR, "package", "dist", "index.mjs")
-  if (!existsSync(bundlePath)) throw new Error(`Bundle not found at ${bundlePath}`)
+  const cliPath = join(TMP_DIR, "package", "dist", "cli.mjs")
+  const indexPath = join(TMP_DIR, "package", "dist", "index.mjs")
+
+  let bundlePath = existsSync(cliPath) ? cliPath : indexPath
+  if (!existsSync(bundlePath)) throw new Error(`Bundle not found at ${cliPath} or ${indexPath}`)
 
   const source = readFileSync(bundlePath, "utf-8")
-
   rmSync(TMP_DIR, { recursive: true, force: true })
 
   return { source, version }
 }
 
-function findBalancedObject(source: string, anchor: string): string {
-  const anchorIdx = source.indexOf(anchor)
-  if (anchorIdx < 0) throw new Error(`Anchor not found: ${anchor}`)
+function parseModelEntries(source: string): ModelEntry[] {
+  // 1. Extract yI (direct provider costs)
+  const yIAnchor = 'id:"anthropic:claude-sonnet-5"'
+  const yIAnchorIdx = source.indexOf(yIAnchor)
+  if (yIAnchorIdx < 0) throw new Error("Could not find yI anchor in CLI bundle")
 
-  let parenIdx = anchorIdx - 1
-  while (parenIdx >= 0 && source[parenIdx] !== "(") parenIdx--
-  if (parenIdx < 0) throw new Error(`Could not find opening ( before anchor: ${anchor}`)
+  const varIdx = source.lastIndexOf("var cI=", yIAnchorIdx)
+  const eqIdx = source.indexOf("yI=", varIdx)
+  const varsDecl = source.slice(varIdx, eqIdx).replace(/,\s*$/, ";")
+  const objectStart = source.indexOf("{", eqIdx)
 
-  const braceStart = source.indexOf("{", parenIdx)
-  if (braceStart < 0) throw new Error(`Could not find { after opening (`)
-
+  let yIEnd = objectStart
   let depth = 0
-  let end = braceStart
-  for (; end < source.length; end++) {
-    if (source[end] === "{") depth++
-    else if (source[end] === "}") {
+  for (; yIEnd < source.length; yIEnd++) {
+    if (source[yIEnd] === "{") depth++
+    else if (source[yIEnd] === "}") {
       depth--
       if (depth === 0) break
     }
   }
+  const yIObjectCode = source.slice(objectStart, yIEnd + 1)
+  const fnCosts = new Function(`${varsDecl} return (${yIObjectCode});`)
+  const costsObj = fnCosts()
 
-  return source.slice(braceStart, end + 1)
-}
-
-function evaluateWithContext(code: string, context: Record<string, unknown>): any {
-  const keys = Object.keys(context)
-  const values = keys.map((k) => context[k])
-  const fn = Function(...keys, `"use strict"; return (${code})`)
-  return fn(...values)
-}
-
-function extractWt(source: string): Record<string, string> {
-  const raw = findBalancedObject(source, 'ANTHROPIC:"anthropic"')
-  return evaluateWithContext(normalizeForEval(raw), {})
-}
-
-function extractSpecConstants(source: string): { chatComplete: string; responses: string; qt: string } {
-  const anchorIdx = source.indexOf('SONNET_4_6:{id:"claude-sonnet-4-6"')
-  if (anchorIdx < 0) throw new Error("Could not find model catalog anchor")
-
-  const before = source.slice(Math.max(0, anchorIdx - 5000), anchorIdx)
-
-  const chatMatch = before.match(/([A-Za-z_$]+)="chatComplete"/)
-  const respMatch = before.match(/([A-Za-z_$]+)="responses"/)
-  if (!chatMatch || !respMatch) throw new Error("Could not find spec constants")
-
-  const qtMatch = before.match(/([A-Za-z_$]+)=\w+\[0\]/)
-  const qtVar = qtMatch ? qtMatch[1] : null
-
-  return {
-    chatComplete: chatMatch[1],
-    responses: respMatch[1],
-    qt: qtVar || "",
-  }
-}
-
-function extractModelCatalog(
-  source: string,
-  wt: Record<string, string>,
-  wtName: string,
-  spec: ReturnType<typeof extractSpecConstants>,
-): Record<string, SnEntry> {
-  const anchorIdx = source.indexOf('SONNET_4_6:{id:"claude-sonnet-4-6"')
-  if (anchorIdx < 0) throw new Error("Could not find model catalog anchor")
-
-  const before = source.slice(Math.max(0, anchorIdx - 5000), anchorIdx)
-  const ctx: Record<string, unknown> = { [wtName]: wt }
-
-  // Extract all variable string assignments before the catalog and inject into context
-  const regex = /\b([a-zA-Z0-9_$]+)\s*=\s*"([^"]+)"/g
-  let match
-  while ((match = regex.exec(before)) !== null) {
-    ctx[match[1]] = match[2]
-  }
-
-  ctx[spec.chatComplete] = "chatComplete"
-  ctx[spec.responses] = "responses"
-  if (spec.qt) ctx[spec.qt] = wt.VERCEL_AI_GATEWAY
-
-  const raw = findBalancedObject(source, 'SONNET_4_6:{id:"claude-sonnet-4-6"')
-  return evaluateWithContext(normalizeForEval(raw), ctx)
-}
-
-function extractCostData(source: string, wt: Record<string, string>, wtName: string): Record<string, CostEntry[]> {
-  const anchor = '{id:"anthropic:claude-sonnet-4-'
-  const anchorIdx = source.indexOf(anchor)
-  if (anchorIdx < 0) throw new Error("Could not find cost data anchor")
-
-  let braceDepth = 0
-  let start = anchorIdx - 1
-  for (; start >= 0; start--) {
-    if (source[start] === "}") braceDepth++
-    else if (source[start] === "{") {
-      if (braceDepth === 0) break
-      braceDepth--
-    }
-  }
-
-  let depth = 0
-  let end = start
-  for (; end < source.length; end++) {
-    if (source[end] === "{") depth++
-    else if (source[end] === "}") {
-      depth--
-      if (depth === 0) break
-    }
-  }
-
-  const raw = source.slice(start, end + 1)
-  return evaluateWithContext(normalizeForEval(raw), { [wtName]: wt }) as Record<string, CostEntry[]>
-}
-
-function getWtVarName(source: string): string {
-  const idx = source.indexOf('ANTHROPIC:"anthropic"')
-  if (idx < 0) throw new Error("Could not find Wt enum")
-  const before = source.slice(Math.max(0, idx - 50), idx)
-  const match = before.match(/\(([A-Za-z_$]+)=\{$/)
-  if (match) return match[1]
-  const match2 = before.match(/([A-Za-z_$]+)=\{$/)
-  if (match2) return match2[1]
-  throw new Error("Could not determine Wt variable name")
-}
-
-function normalizeForEval(code: string): string {
-  return code
-    .replace(/!0/g, "true")
-    .replace(/!1/g, "false")
-    .replace(/(\d+)e(\d+)/g, (_: string, m: string, e: string) =>
-      String(Number(m) * Math.pow(10, Number(e)))
-    )
-}
-
-function buildCostMap(costs: Record<string, CostEntry[]>): Map<string, CostEntry> {
-  const map = new Map<string, CostEntry>()
-  for (const arr of Object.values(costs)) {
+  const costMap = new Map<string, { input: number; output: number; cache_read?: number; cache_write?: number }>()
+  for (const arr of Object.values(costsObj) as any[]) {
     for (const entry of arr) {
       const colonIdx = entry.id.indexOf(":")
       const bareId = colonIdx >= 0 ? entry.id.slice(colonIdx + 1) : entry.id
-      map.set(bareId, entry)
+      costMap.set(bareId, {
+        input: entry.promptCost,
+        output: entry.completionCost,
+        ...(entry.cacheHitCost > 0 && { cache_read: entry.cacheHitCost }),
+        ...(entry.cacheWrite5mCost > 0 && { cache_write: entry.cacheWrite5mCost }),
+      })
     }
   }
-  return map
-}
 
-function buildModelEntry(
-  entry: SnEntry,
-  costMap: Map<string, CostEntry>,
-): ModelEntry | null {
-  const provider = entry.provider || "unknown"
-  const tier = TIER_MAP[provider] ?? "open-source"
-
-  const costEntry = costMap.get(entry.id)
-  let cost: { input: number; output: number; cache_read?: number; cache_write?: number }
-  if (costEntry) {
-    cost = {
-      input: costEntry.promptCost,
-      output: costEntry.completionCost,
+  // 2. Extract bI and EI (gateway costs)
+  const bIAnchorIdx = source.indexOf('bI=[{canonicalId:"zai-org/GLM-5"')
+  if (bIAnchorIdx >= 0) {
+    const startBracket = source.indexOf("[", bIAnchorIdx)
+    let endBracket = startBracket
+    depth = 0
+    for (; endBracket < source.length; endBracket++) {
+      if (source[endBracket] === "[") depth++
+      else if (source[endBracket] === "]") {
+        depth--
+        if (depth === 0) break
+      }
     }
-    if (costEntry.cacheHitCost > 0) cost.cache_read = costEntry.cacheHitCost
-    if (costEntry.cacheWrite5mCost > 0) cost.cache_write = costEntry.cacheWrite5mCost
-  } else {
-    const fallback = FALLBACK_COSTS[entry.id]
-    if (!fallback) return null
-    cost = fallback
+    const bICode = source.slice(startBracket, endBracket + 1).replace(/!0/g, "true").replace(/!1/g, "false")
+    const bIArray = new Function(`var kI="MiniMaxAI/MiniMax-M3-Free"; return (${bICode});`)()
+
+    const EIVarIdx = source.indexOf("EI=[", endBracket)
+    let EIArray: any[] = []
+    if (EIVarIdx >= 0) {
+      const EIStartBracket = source.indexOf("[", EIVarIdx)
+      let EIEndBracket = EIStartBracket
+      depth = 0
+      for (; EIEndBracket < source.length; EIEndBracket++) {
+        if (source[EIEndBracket] === "[") depth++
+        else if (source[EIEndBracket] === "]") {
+          depth--
+          if (depth === 0) break
+        }
+      }
+      const EICode = source.slice(EIStartBracket, EIEndBracket + 1).replace(/!0/g, "true").replace(/!1/g, "false")
+      EIArray = new Function(`var kI="MiniMaxAI/MiniMax-M3-Free"; return (${EICode});`)()
+    }
+
+    const gatewayEntries = [...bIArray, ...EIArray]
+    for (const g of gatewayEntries) {
+      const firstProvName = g.order && g.order[0] ? g.order[0] : Object.keys(g.providers)[0]
+      const prov = g.providers[firstProvName] || Object.values(g.providers)[0]
+      if (prov) {
+        costMap.set(g.canonicalId, {
+          input: prov.promptCost,
+          output: prov.completionCost,
+          ...(prov.cacheReadCost > 0 && { cache_read: prov.cacheReadCost }),
+          ...(prov.cacheWriteCost > 0 && { cache_write: prov.cacheWriteCost }),
+        })
+      }
+    }
   }
 
-  const limit = entry.contextWindow
-    ? { context: entry.contextWindow, output: FALLBACK_LIMITS[entry.id]?.output ?? 65536 }
-    : FALLBACK_LIMITS[entry.id] ?? { context: 200000, output: 65536 }
+  // 3. Extract Models Catalog
+  const catAnchor = 'SONNET_4_6:{id:"claude-sonnet-4-6"'
+  const catAnchorIdx = source.indexOf(catAnchor)
+  if (catAnchorIdx < 0) throw new Error("Could not find model catalog anchor")
 
-  return {
-    id: entry.id,
-    name: entry.id.endsWith("-Free") && !entry.name.includes("Free")
-      ? `${entry.name} (Free)`
-      : entry.name,
-    tier,
-    reasoning: entry.reasoning || (entry.reasoningEfforts?.length ?? 0) > 0,
-    tool_call: true,
-    cost,
-    limit,
+  let catStart = catAnchorIdx
+  depth = 0
+  for (; catStart >= 0; catStart--) {
+    if (source[catStart] === "}") depth++
+    else if (source[catStart] === "{") {
+      if (depth === 0) break
+      depth--
+    }
   }
+
+  let catEnd = catStart
+  depth = 0;
+  for (; catEnd < source.length; catEnd++) {
+    if (source[catEnd] === "{") depth++
+    else if (source[catEnd] === "}") {
+      depth--
+      if (depth === 0) break
+    }
+  }
+
+  const catObjectCode = source.slice(catStart, catEnd + 1).replace(/!0/g, "true").replace(/!1/g, "false")
+  const specVars = 'var SI="chatComplete",wI="responses",kI="MiniMaxAI/MiniMax-M3-Free";'
+  const helperStubs = "function isLingFlashFreeEnded(){ return false; }"
+
+  const fnModels = new Function(`${varsDecl} ${specVars} ${helperStubs} return (${catObjectCode});`)
+  const modelsMap = fnModels()
+
+  const entries: ModelEntry[] = []
+
+  for (const [, m] of Object.entries(modelsMap) as [string, any][]) {
+    const tier = m.provider === "anthropic" || m.provider === "openai" ? "premium" : "open-source"
+    const cost = costMap.get(m.id) || { input: 0, output: 0 }
+    const contextLimit = m.contextWindow || 200000
+    const outputLimit = m.maxOutputTokens || 65536
+
+    entries.push({
+      id: m.id,
+      name: m.name,
+      tier,
+      reasoning: Boolean(m.reasoning || (m.reasoningEfforts && m.reasoningEfforts.length > 0)),
+      tool_call: true,
+      cost,
+      limit: { context: contextLimit, output: outputLimit },
+    })
+  }
+
+  entries.sort((a, b) => {
+    if (a.tier !== b.tier) return a.tier === "premium" ? -1 : 1
+    return a.name.localeCompare(b.name)
+  })
+
+  return entries
 }
 
 function toConfigKey(id: string): string {
@@ -438,50 +295,9 @@ async function main() {
   const { source, version } = await fetchLatestBundle()
   console.log(`Read CLI bundle v${version} (${(source.length / 1024).toFixed(0)} KB)`)
 
-  console.log("Extracting provider enum (Wt)...")
-  const wt = extractWt(source)
-  const wtName = getWtVarName(source)
-  console.log(`  Provider enum var: ${wtName}, keys: ${Object.keys(wt).join(", ")}`)
-
-  console.log("Extracting spec constants...")
-  const spec = extractSpecConstants(source)
-  console.log(`  chatComplete=${spec.chatComplete}, responses=${spec.responses}, qt=${spec.qt || "(none)"}`)
-
-  console.log("Extracting model catalog...")
-  const models = extractModelCatalog(source, wt, wtName, spec)
-  const modelCount = Object.keys(models).length
-  console.log(`  Found ${modelCount} models`)
-
-  console.log("Extracting cost data...")
-  const costs = extractCostData(source, wt, wtName)
-  const costMap = buildCostMap(costs)
-  console.log(`  Found ${costMap.size} cost entries`)
-
-  const entries: ModelEntry[] = []
-
-  for (const [, model] of Object.entries(models)) {
-    const entry = buildModelEntry(model, costMap)
-    if (entry) {
-      entries.push(entry)
-    } else {
-      console.warn(`  Skipping ${model.id}: no cost data`)
-    }
-  }
-
-  for (const extra of HARDCODED_EXTRAS) {
-    if (!entries.some((e) => e.id === extra.id)) {
-      const entry = buildModelEntry(extra, costMap)
-      if (entry) {
-        console.log(`  Adding hardcoded extra: ${extra.id}`)
-        entries.push(entry)
-      }
-    }
-  }
-
-  entries.sort((a, b) => {
-    if (a.tier !== b.tier) return a.tier === "premium" ? -1 : 1
-    return a.name.localeCompare(b.name)
-  })
+  console.log("Parsing model entries and pricing...")
+  const entries = parseModelEntries(source)
+  console.log(`  Found ${entries.length} models`)
 
   console.log(`\nWriting ${MODELS_JSON} with ${entries.length} models...`)
   writeFileSync(MODELS_JSON, JSON.stringify(entries, null, 2) + "\n", "utf-8")
@@ -500,7 +316,7 @@ async function main() {
   console.log("\nModel list:")
   for (const entry of entries) {
     const cost = `$${entry.cost.input}/$${entry.cost.output}`
-    console.log(`  ${entry.tier.padEnd(12)} ${entry.id.padEnd(35)} ${entry.name.padEnd(25)} ${cost}`)
+    console.log(`  ${entry.tier.padEnd(12)} ${entry.id.padEnd(38)} ${entry.name.padEnd(25)} ${cost}`)
   }
 
   if (!shouldUpdateGlobal) {

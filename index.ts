@@ -7,10 +7,11 @@ export interface CommandCodeProviderOptions {
   baseURL?: string
   headers?: Record<string, string>
   ccVersion?: string
+  authPaths?: string[]
 }
 
 export function createCommandCode(options: CommandCodeProviderOptions = {}) {
-  const apiKey = resolveApiKey({ apiKey: options.apiKey })
+  const apiKey = resolveApiKey({ apiKey: options.apiKey, authPaths: options.authPaths })
   if (!apiKey) {
     throw new Error(
       "Command Code API key not found. Set COMMANDCODE_API_KEY env var, create ~/.commandcode/auth.json, or pass apiKey option.",

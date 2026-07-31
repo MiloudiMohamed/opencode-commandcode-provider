@@ -5,13 +5,14 @@ import { join } from "path"
 export function resolveApiKey(options: {
   apiKey?: string
   env?: Record<string, string | undefined>
+  authPaths?: string[]
 }): string | undefined {
   if (options.apiKey) return options.apiKey
 
   const envKey = options.env?.COMMANDCODE_API_KEY ?? process.env.COMMANDCODE_API_KEY
   if (envKey) return envKey
 
-  const authPaths = [
+  const authPaths = options.authPaths ?? [
     join(homedir(), ".commandcode", "auth.json"),
     join(homedir(), ".pi", "agent", "auth.json"),
   ]

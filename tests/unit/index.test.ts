@@ -11,12 +11,12 @@ afterAll(() => {
 })
 
 test("throws when no API key is available", () => {
-  expect(() => createCommandCode()).toThrow("Command Code API key not found")
+  expect(() => createCommandCode({ authPaths: [] })).toThrow("Command Code API key not found")
 })
 
 test("throws with descriptive message listing all options", () => {
   try {
-    createCommandCode()
+    createCommandCode({ authPaths: [] })
     expect.unreachable("Should have thrown")
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err)
