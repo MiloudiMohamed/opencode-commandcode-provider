@@ -57,32 +57,103 @@ async function fetchLatestBundle(): Promise<{ source: string; version: string }>
   return { source, version }
 }
 
-function parseModelEntries(source: string): ModelEntry[] {
-  // 1. Extract yI (direct provider costs)
-  const yIAnchor = 'id:"anthropic:claude-sonnet-5"'
-  const yIAnchorIdx = source.indexOf(yIAnchor)
-  if (yIAnchorIdx < 0) throw new Error("Could not find yI anchor in CLI bundle")
+function normalizeBundleCode(code: string): string {
+  return code
+    .replace(/!0/g, "true")
+    .replace(/!1/g, "false")
+    .replace(/(\d+)e(\d+)/g, (_match: string, mantissa: string, exponent: string) =>
+      String(Number(mantissa) * Math.pow(10, Number(exponent))))
+}
 
-  const varIdx = source.lastIndexOf("var cI=", yIAnchorIdx)
-  const eqIdx = source.indexOf("yI=", varIdx)
-  const varsDecl = source.slice(varIdx, eqIdx).replace(/,\s*$/, ";")
-  const objectStart = source.indexOf("{", eqIdx)
-
-  let yIEnd = objectStart
+function findBalanced(source: string, start: number, open: string, close: string): string {
   let depth = 0
-  for (; yIEnd < source.length; yIEnd++) {
-    if (source[yIEnd] === "{") depth++
-    else if (source[yIEnd] === "}") {
+  let quote: string | undefined
+  let escaped = false
+
+  for (let i = start; i < source.length; i++) {
+    const ch = source[i]
+    if (quote) {
+      if (escaped) escaped = false
+      else if (ch === "\\") escaped = true
+      else if (ch === quote) quote = undefined
+      continue
+    }
+    if (ch === '"' || ch === "'") {
+      quote = ch
+      continue
+    }
+    if (ch === open) depth++
+    else if (ch === close) {
       depth--
-      if (depth === 0) break
+      if (depth === 0) return source.slice(start, i + 1)
     }
   }
-  const yIObjectCode = source.slice(objectStart, yIEnd + 1)
-  const fnCosts = new Function(`${varsDecl} return (${yIObjectCode});`)
-  const costsObj = fnCosts()
+
+  throw new Error(`Unbalanced ${open}${close} expression in CLI bundle`)
+}
+
+function lastMatch(source: string, pattern: RegExp): RegExpExecArray | undefined {
+  pattern.lastIndex = 0
+  let result: RegExpExecArray | undefined
+  let match: RegExpExecArray | null
+  while ((match = pattern.exec(source)) !== null) {
+    result = match
+  }
+  return result
+}
+
+function extractStringBindings(source: string): Record<string, unknown> {
+  const bindings: Record<string, unknown> = {}
+  const strings = /\b([A-Za-z_$][\w$]*)\s*=\s*"([^"]*)"/g
+  let match: RegExpExecArray | null
+  while ((match = strings.exec(source)) !== null) {
+    bindings[match[1]] = match[2]
+  }
+
+  const aliases = /\b([A-Za-z_$][\w$]*)\s*=\s*([A-Za-z_$][\w$]*)/g
+  for (let pass = 0; pass < 3; pass++) {
+    aliases.lastIndex = 0
+    while ((match = aliases.exec(source)) !== null) {
+      const value = bindings[match[2]]
+      if (value !== undefined) bindings[match[1]] = value
+    }
+  }
+  return bindings
+}
+
+function evaluateBundleExpression(code: string, bindings: Record<string, unknown>): any {
+  const reserved = new Set([
+    "await", "break", "case", "catch", "class", "const", "continue", "debugger", "default", "delete",
+    "do", "else", "enum", "export", "extends", "false", "finally", "for", "function", "if", "implements",
+    "import", "in", "instanceof", "interface", "let", "new", "null", "package", "private", "protected",
+    "public", "return", "static", "super", "switch", "this", "throw", "true", "try", "typeof", "var",
+    "void", "while", "with", "yield", "arguments", "eval",
+  ])
+  const referenced = new Set(normalizeBundleCode(code).match(/[A-Za-z_$][\w$]*/g) ?? [])
+  const keys = Object.keys(bindings).filter((key) => referenced.has(key) && !reserved.has(key))
+  return Function(...keys, `"use strict"; return (${normalizeBundleCode(code)})`)(...keys.map((key) => bindings[key]))
+}
+
+function parseModelEntries(source: string): ModelEntry[] {
+  const modelAnchor = 'SONNET_4_6:{id:"claude-sonnet-4-6"'
+  const modelAnchorIdx = source.indexOf(modelAnchor)
+  if (modelAnchorIdx < 0) throw new Error("Could not find model catalog anchor")
+
+  // The minifier renames these variables between releases. Identify the
+  // structures by their contents instead of depending on generated names.
+  const directCostMatch = lastMatch(
+    source.slice(0, modelAnchorIdx),
+    /([A-Za-z_$][\w$]*)=\{\[/g,
+  )
+  if (!directCostMatch) throw new Error("Could not find direct model cost catalog")
+
+  const directCostStart = source.indexOf("{", directCostMatch.index)
+  const directCostCode = findBalanced(source, directCostStart, "{", "}")
+  const directBindings = extractStringBindings(source.slice(0, directCostStart))
+  const directCosts = evaluateBundleExpression(directCostCode, directBindings)
 
   const costMap = new Map<string, { input: number; output: number; cache_read?: number; cache_write?: number }>()
-  for (const arr of Object.values(costsObj) as any[]) {
+  for (const arr of Object.values(directCosts) as any[]) {
     for (const entry of arr) {
       const colonIdx = entry.id.indexOf(":")
       const bareId = colonIdx >= 0 ? entry.id.slice(colonIdx + 1) : entry.id
@@ -95,91 +166,61 @@ function parseModelEntries(source: string): ModelEntry[] {
     }
   }
 
-  // 2. Extract bI and EI (gateway costs)
-  const bIAnchorIdx = source.indexOf('bI=[{canonicalId:"zai-org/GLM-5"')
-  if (bIAnchorIdx >= 0) {
-    const startBracket = source.indexOf("[", bIAnchorIdx)
-    let endBracket = startBracket
-    depth = 0
-    for (; endBracket < source.length; endBracket++) {
-      if (source[endBracket] === "[") depth++
-      else if (source[endBracket] === "]") {
-        depth--
-        if (depth === 0) break
-      }
-    }
-    const bICode = source.slice(startBracket, endBracket + 1).replace(/!0/g, "true").replace(/!1/g, "false")
-    const bIArray = new Function(`var kI="MiniMaxAI/MiniMax-M3-Free"; return (${bICode});`)()
+  const gatewayPattern = /[A-Za-z_$][\w$]*=\[\{canonicalId:"[^"]+",(?:gatewaySlug|openrouterSlug):/g
+  const gatewayRegion = source.slice(directCostStart)
+  let gatewayMatch: RegExpExecArray | null
+  const gatewayArrays: any[] = []
+  while ((gatewayMatch = gatewayPattern.exec(gatewayRegion)) !== null) {
+    const arrayStart = directCostStart + gatewayMatch.index + gatewayMatch[0].indexOf("[")
+    const arrayCode = findBalanced(source, arrayStart, "[", "]")
+    const bindings = extractStringBindings(source.slice(0, arrayStart))
 
-    const EIVarIdx = source.indexOf("EI=[", endBracket)
-    let EIArray: any[] = []
-    if (EIVarIdx >= 0) {
-      const EIStartBracket = source.indexOf("[", EIVarIdx)
-      let EIEndBracket = EIStartBracket
-      depth = 0
-      for (; EIEndBracket < source.length; EIEndBracket++) {
-        if (source[EIEndBracket] === "[") depth++
-        else if (source[EIEndBracket] === "]") {
-          depth--
-          if (depth === 0) break
-        }
-      }
-      const EICode = source.slice(EIStartBracket, EIEndBracket + 1).replace(/!0/g, "true").replace(/!1/g, "false")
-      EIArray = new Function(`var kI="MiniMaxAI/MiniMax-M3-Free"; return (${EICode});`)()
+    for (const name of arrayCode.match(/(?:effectiveFrom|peakWindowsUtc|canonicalId):([A-Za-z_$][\w$]*)/g) ?? []) {
+      const variable = name.slice(name.indexOf(":") + 1)
+      if (bindings[variable] === undefined) bindings[variable] = variable === "peakWindowsUtc" ? [] : ""
     }
 
-    const gatewayEntries = [...bIArray, ...EIArray]
-    for (const g of gatewayEntries) {
-      const firstProvName = g.order && g.order[0] ? g.order[0] : Object.keys(g.providers)[0]
-      const prov = g.providers[firstProvName] || Object.values(g.providers)[0]
-      if (prov) {
-        costMap.set(g.canonicalId, {
-          input: prov.promptCost,
-          output: prov.completionCost,
-          ...(prov.cacheReadCost > 0 && { cache_read: prov.cacheReadCost }),
-          ...(prov.cacheWriteCost > 0 && { cache_write: prov.cacheWriteCost }),
+    gatewayArrays.push(evaluateBundleExpression(arrayCode, bindings))
+  }
+
+  for (const gatewayEntries of gatewayArrays) {
+    for (const entry of gatewayEntries) {
+      const firstProvider = entry.order?.[0]
+      const provider = (firstProvider && entry.providers?.[firstProvider]) || Object.values(entry.providers ?? {})[0] as any
+      if (provider) {
+        costMap.set(entry.canonicalId, {
+          input: provider.promptCost,
+          output: provider.completionCost,
+          ...(provider.cacheReadCost > 0 && { cache_read: provider.cacheReadCost }),
+          ...(provider.cacheWriteCost > 0 && { cache_write: provider.cacheWriteCost }),
         })
       }
     }
   }
 
-  // 3. Extract Models Catalog
-  const catAnchor = 'SONNET_4_6:{id:"claude-sonnet-4-6"'
-  const catAnchorIdx = source.indexOf(catAnchor)
-  if (catAnchorIdx < 0) throw new Error("Could not find model catalog anchor")
-
-  let catStart = catAnchorIdx
-  depth = 0
-  for (; catStart >= 0; catStart--) {
-    if (source[catStart] === "}") depth++
-    else if (source[catStart] === "{") {
+  let modelStart = modelAnchorIdx
+  let depth = 0
+  for (; modelStart >= 0; modelStart--) {
+    if (source[modelStart] === "}") depth++
+    else if (source[modelStart] === "{") {
       if (depth === 0) break
       depth--
     }
   }
 
-  let catEnd = catStart
-  depth = 0;
-  for (; catEnd < source.length; catEnd++) {
-    if (source[catEnd] === "{") depth++
-    else if (source[catEnd] === "}") {
-      depth--
-      if (depth === 0) break
-    }
-  }
-
-  const catObjectCode = source.slice(catStart, catEnd + 1).replace(/!0/g, "true").replace(/!1/g, "false")
-  const specVars = 'var SI="chatComplete",wI="responses",kI="MiniMaxAI/MiniMax-M3-Free";'
-  const helperStubs = "function isLingFlashFreeEnded(){ return false; }"
-
-  const fnModels = new Function(`${varsDecl} ${specVars} ${helperStubs} return (${catObjectCode});`)
-  const modelsMap = fnModels()
+  const modelCode = findBalanced(source, modelStart, "{", "}")
+  const modelBindings = extractStringBindings(source.slice(0, modelStart))
+  modelBindings.isLingFlashFreeEnded = () => false
+  const modelsMap = evaluateBundleExpression(modelCode, modelBindings)
 
   const entries: ModelEntry[] = []
 
   for (const [, m] of Object.entries(modelsMap) as [string, any][]) {
-    const tier = m.provider === "anthropic" || m.provider === "openai" ? "premium" : "open-source"
-    const cost = costMap.get(m.id) || { input: 0, output: 0 }
+    const tier = m.provider === "anthropic" || m.provider === "openai" || m.vendorLabel === "OpenAI"
+      ? "premium"
+      : "open-source"
+    const cost = costMap.get(m.id)
+    if (!cost) throw new Error(`Missing pricing data for model ${m.id}`)
     const contextLimit = m.contextWindow || 200000
     const outputLimit = m.maxOutputTokens || 65536
 
