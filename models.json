@@ -250,6 +250,22 @@
     }
   },
   {
+    "id": "deepseek/deepseek-v4-flash-fast",
+    "name": "DeepSeek V4 Flash Fast",
+    "tier": "open-source",
+    "reasoning": true,
+    "tool_call": true,
+    "cost": {
+      "input": 0.28,
+      "output": 0.56,
+      "cache_read": 0.07
+    },
+    "limit": {
+      "context": 1000000,
+      "output": 65536
+    }
+  },
+  {
     "id": "deepseek/deepseek-v4-flash-vision-exp",
     "name": "DeepSeek V4 Flash Vision (exp)",
     "tier": "open-source",
@@ -258,7 +274,7 @@
     "cost": {
       "input": 0.22,
       "output": 0.66,
-      "cache_read": 0.01
+      "cache_read": 0.007
     },
     "limit": {
       "context": 1000000,
@@ -368,10 +384,10 @@
     "reasoning": true,
     "tool_call": true,
     "cost": {
-      "input": 0.75,
-      "output": 3.75,
-      "cache_read": 0.075,
-      "cache_write": 0.04167
+      "input": 1.5,
+      "output": 7.5,
+      "cache_read": 0.15,
+      "cache_write": 0.08334
     },
     "limit": {
       "context": 1048576,
@@ -456,6 +472,22 @@
     "limit": {
       "context": 1000000,
       "output": 65536
+    }
+  },
+  {
+    "id": "z-ai/glm-5.3-flash",
+    "name": "GLM-5.3 Flash",
+    "tier": "open-source",
+    "reasoning": true,
+    "tool_call": true,
+    "cost": {
+      "input": 0.15,
+      "output": 0.5,
+      "cache_read": 0.03
+    },
+    "limit": {
+      "context": 1048576,
+      "output": 131072
     }
   },
   {
@@ -604,7 +636,7 @@
   },
   {
     "id": "poolside/laguna-s-2.1-free",
-    "name": "Laguna S 2.1",
+    "name": "Laguna S 2.1 (Free)",
     "tier": "open-source",
     "reasoning": true,
     "tool_call": true,
@@ -619,7 +651,7 @@
   },
   {
     "id": "inclusionai/ling-3.0-flash-free",
-    "name": "Ling 3.0 Flash",
+    "name": "Ling 3.0 Flash (Free)",
     "tier": "open-source",
     "reasoning": true,
     "tool_call": true,
@@ -697,7 +729,22 @@
     }
   },
   {
-    "id": "MiniMaxAI/MiniMax-M3-Free",
+    "id": "minimax/minimax-m2.7-free",
+    "name": "MiniMax M2.7 (Free)",
+    "tier": "open-source",
+    "reasoning": false,
+    "tool_call": true,
+    "cost": {
+      "input": 0,
+      "output": 0
+    },
+    "limit": {
+      "context": 197000,
+      "output": 65536
+    }
+  },
+  {
+    "id": "MiniMaxAI/MiniMax-M3",
     "name": "MiniMax M3",
     "tier": "open-source",
     "reasoning": true,
@@ -713,8 +760,8 @@
     }
   },
   {
-    "id": "MiniMaxAI/MiniMax-M3",
-    "name": "MiniMax M3",
+    "id": "MiniMaxAI/MiniMax-M3-Free",
+    "name": "MiniMax M3 (Free)",
     "tier": "open-source",
     "reasoning": true,
     "tool_call": true,
@@ -722,6 +769,21 @@
       "input": 0.3,
       "output": 1.2,
       "cache_read": 0.06
+    },
+    "limit": {
+      "context": 1000000,
+      "output": 65536
+    }
+  },
+  {
+    "id": "minimax/minimax-m3-free",
+    "name": "MiniMax M3 (Free)",
+    "tier": "open-source",
+    "reasoning": true,
+    "tool_call": true,
+    "cost": {
+      "input": 0,
+      "output": 0
     },
     "limit": {
       "context": 1000000,
@@ -793,21 +855,6 @@
     }
   },
   {
-    "id": "stealth/ox-alpha",
-    "name": "Ox Alpha",
-    "tier": "open-source",
-    "reasoning": true,
-    "tool_call": true,
-    "cost": {
-      "input": 0,
-      "output": 0
-    },
-    "limit": {
-      "context": 1048576,
-      "output": 131072
-    }
-  },
-  {
     "id": "Qwen/Qwen3.6-Max-Preview",
     "name": "Qwen 3.6 Max Preview",
     "tier": "open-source",
@@ -866,8 +913,7 @@
     "cost": {
       "input": 2.5,
       "output": 7.5,
-      "cache_read": 0.5,
-      "cache_write": 3.13
+      "cache_read": 0.5
     },
     "limit": {
       "context": 1000000,
@@ -883,8 +929,7 @@
     "cost": {
       "input": 0.4,
       "output": 1.6,
-      "cache_read": 0.08,
-      "cache_write": 0.5
+      "cache_read": 0.08
     },
     "limit": {
       "context": 1000000,
@@ -908,6 +953,22 @@
     }
   },
   {
+    "id": "Qwen/Qwen3.8-Flash",
+    "name": "Qwen 3.8 Flash",
+    "tier": "open-source",
+    "reasoning": true,
+    "tool_call": true,
+    "cost": {
+      "input": 0.16,
+      "output": 0.47,
+      "cache_read": 0.016
+    },
+    "limit": {
+      "context": 1000000,
+      "output": 65536
+    }
+  },
+  {
     "id": "Qwen/Qwen3.8-Max",
     "name": "Qwen 3.8 Max",
     "tier": "open-source",
@@ -916,8 +977,7 @@
     "cost": {
       "input": 2,
       "output": 6,
-      "cache_read": 0.25,
-      "cache_write": 2.5
+      "cache_read": 0.25
     },
     "limit": {
       "context": 1000000,
@@ -984,6 +1044,22 @@
     },
     "limit": {
       "context": 262144,
+      "output": 65536
+    }
+  },
+  {
+    "id": "tencent/hy4-preview",
+    "name": "Tencent Hy4 Preview",
+    "tier": "open-source",
+    "reasoning": true,
+    "tool_call": true,
+    "cost": {
+      "input": 0.834,
+      "output": 2.501,
+      "cache_read": 0.042
+    },
+    "limit": {
+      "context": 1048576,
       "output": 65536
     }
   }

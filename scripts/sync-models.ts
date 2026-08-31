@@ -166,7 +166,7 @@ function parseModelEntries(source: string): ModelEntry[] {
     }
   }
 
-  const gatewayPattern = /[A-Za-z_$][\w$]*=\[\{canonicalId:"[^"]+",(?:gatewaySlug|openrouterSlug):/g
+  const gatewayPattern = /[A-Za-z_$][\w$]*=\[\{canonicalId:"[^"]+",(?:gatewaySlug|openrouterSlug|slug):/g
   const gatewayRegion = source.slice(directCostStart)
   let gatewayMatch: RegExpExecArray | null
   const gatewayArrays: any[] = []
@@ -185,15 +185,26 @@ function parseModelEntries(source: string): ModelEntry[] {
 
   for (const gatewayEntries of gatewayArrays) {
     for (const entry of gatewayEntries) {
-      const firstProvider = entry.order?.[0]
-      const provider = (firstProvider && entry.providers?.[firstProvider]) || Object.values(entry.providers ?? {})[0] as any
-      if (provider) {
+      if (entry.promptCost !== undefined) {
         costMap.set(entry.canonicalId, {
-          input: provider.promptCost,
-          output: provider.completionCost,
-          ...(provider.cacheReadCost > 0 && { cache_read: provider.cacheReadCost }),
-          ...(provider.cacheWriteCost > 0 && { cache_write: provider.cacheWriteCost }),
+          input: entry.promptCost,
+          output: entry.completionCost,
+          ...(entry.cacheReadCost > 0 && { cache_read: entry.cacheReadCost }),
+          ...(entry.cacheWriteCost > 0 && { cache_write: entry.cacheWriteCost }),
+          ...(entry.cacheWrite5mCost > 0 && { cache_write: entry.cacheWrite5mCost }),
         })
+      } else {
+        const firstProvider = entry.order?.[0]
+        const provider = (firstProvider && entry.providers?.[firstProvider]) || Object.values(entry.providers ?? {})[0] as any
+        if (provider && typeof provider === "object") {
+          costMap.set(entry.canonicalId, {
+            input: provider.promptCost,
+            output: provider.completionCost,
+            ...(provider.cacheReadCost > 0 && { cache_read: provider.cacheReadCost }),
+            ...(provider.cacheWriteCost > 0 && { cache_write: provider.cacheWriteCost }),
+            ...(provider.cacheWrite5mCost > 0 && { cache_write: provider.cacheWrite5mCost }),
+          })
+        }
       }
     }
   }
@@ -226,7 +237,9 @@ function parseModelEntries(source: string): ModelEntry[] {
 
     entries.push({
       id: m.id,
-      name: m.name,
+      name: m.id.toLowerCase().endsWith("-free") && !m.name.includes("Free")
+        ? `${m.name} (Free)`
+        : m.name,
       tier,
       reasoning: Boolean(m.reasoning || (m.reasoningEfforts && m.reasoningEfforts.length > 0)),
       tool_call: true,

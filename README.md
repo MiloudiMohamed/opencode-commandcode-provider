@@ -115,6 +115,7 @@ COMMANDCODE_API_KEY=your-key opencode
 | `gpt-5.6-sol`                              | GPT-5.6 Sol                 | premium      | yes | 1M     |
 | `gpt-5.6-terra`                            | GPT-5.6 Terra               | premium      | yes | 1M     |
 | `deepseek/deepseek-v4-flash`               | DeepSeek V4 Flash (latest)  | open-source  | yes | 1M     |
+| `deepseek/deepseek-v4-flash-fast`          | DeepSeek V4 Flash Fast      | open-source  | yes | 1M     |
 | `deepseek/deepseek-v4-flash-vision-exp`    | DeepSeek V4 Flash Vision (exp) | open-source  | yes | 1M     |
 | `deepseek/deepseek-v4-pro`                 | DeepSeek V4 Pro (latest)    | open-source  | yes | 1M     |
 | `sakana/fugu-ultra`                        | Fugu Ultra                  | open-source  | yes | 1M     |
@@ -128,6 +129,7 @@ COMMANDCODE_API_KEY=your-key opencode
 | `zai-org/GLM-5.2`                          | GLM-5.2                     | open-source  | yes | 1M     |
 | `zai-org/GLM-5.2-Fast`                     | GLM-5.2 Fast                | open-source  | no  | 1M     |
 | `zai-org/GLM-5.3`                          | GLM-5.3                     | open-source  | yes | 1M     |
+| `z-ai/glm-5.3-flash`                       | GLM-5.3 Flash               | open-source  | yes | 1M     |
 | `xai/grok-4.5`                             | Grok 4.5                    | open-source  | yes | 500K   |
 | `xai/grok-4.6`                             | Grok 4.6                    | open-source  | yes | 500K   |
 | `thinkingmachines/inkling`                 | Inkling                     | open-source  | yes | 256K   |
@@ -137,30 +139,33 @@ COMMANDCODE_API_KEY=your-key opencode
 | `moonshotai/Kimi-K2.7-Code`                | Kimi K2.7 Code              | open-source  | yes | 256K   |
 | `moonshotai/Kimi-K2.7-Code-Highspeed`      | Kimi K2.7 Code HighSpeed    | open-source  | yes | 262K   |
 | `moonshotai/Kimi-K3`                       | Kimi K3                     | open-source  | yes | 1M     |
-| `poolside/laguna-s-2.1-free`               | Laguna S 2.1                | open-source  | yes | 256K   |
-| `inclusionai/ling-3.0-flash-free`          | Ling 3.0 Flash              | open-source  | yes | 256K   |
+| `poolside/laguna-s-2.1-free`               | Laguna S 2.1 (Free)         | open-source  | yes | 256K   |
+| `inclusionai/ling-3.0-flash-free`          | Ling 3.0 Flash (Free)       | open-source  | yes | 256K   |
 | `xiaomi/mimo-v2.5`                         | MiMo V2.5                   | open-source  | no  | 1M     |
 | `xiaomi/mimo-v2.5-pro`                     | MiMo V2.5 Pro               | open-source  | no  | 1M     |
 | `MiniMaxAI/MiniMax-M2.5`                   | MiniMax M2.5                | open-source  | no  | 200K   |
 | `MiniMaxAI/MiniMax-M2.7`                   | MiniMax M2.7                | open-source  | no  | 200K   |
-| `MiniMaxAI/MiniMax-M3-Free`                | MiniMax M3                  | open-source  | yes | 1M     |
+| `minimax/minimax-m2.7-free`                | MiniMax M2.7 (Free)         | open-source  | no  | 197K   |
 | `MiniMaxAI/MiniMax-M3`                     | MiniMax M3                  | open-source  | yes | 1M     |
+| `MiniMaxAI/MiniMax-M3-Free`                | MiniMax M3 (Free)           | open-source  | yes | 1M     |
+| `minimax/minimax-m3-free`                  | MiniMax M3 (Free)           | open-source  | yes | 1M     |
 | `meta/muse-spark-1.1`                      | Muse Spark 1.1              | open-source  | yes | 1M     |
 | `meta/muse-spark-1.2`                      | Muse Spark 1.2              | open-source  | yes | 1M     |
 | `meta/muse-spark-1.2-contributor`          | Muse Spark 1.2 Contributor  | open-source  | yes | 1M     |
 | `nvidia/nemotron-3-ultra-550b-a55b`        | Nemotron 3 Ultra            | open-source  | yes | 1M     |
-| `stealth/ox-alpha`                         | Ox Alpha                    | open-source  | yes | 1M     |
 | `Qwen/Qwen3.6-Max-Preview`                 | Qwen 3.6 Max Preview        | open-source  | yes | 200K   |
 | `Qwen/Qwen3.6-Plus`                        | Qwen 3.6 Plus               | open-source  | yes | 200K   |
 | `Qwen/Qwen3.7-Flash`                       | Qwen 3.7 Flash              | open-source  | yes | 1M     |
 | `Qwen/Qwen3.7-Max`                         | Qwen 3.7 Max                | open-source  | yes | 1M     |
 | `Qwen/Qwen3.7-Plus`                        | Qwen 3.7 Plus               | open-source  | yes | 1M     |
 | `Qwen/Qwen3.8-27B`                         | Qwen 3.8 27B                | open-source  | yes | 262K   |
+| `Qwen/Qwen3.8-Flash`                       | Qwen 3.8 Flash              | open-source  | yes | 1M     |
 | `Qwen/Qwen3.8-Max`                         | Qwen 3.8 Max                | open-source  | yes | 1M     |
 | `stepfun/Step-3.5-Flash`                   | Step 3.5 Flash              | open-source  | yes | 1M     |
 | `stepfun/Step-3.7-Flash`                   | Step 3.7 Flash              | open-source  | yes | 256K   |
 | `tencent/hy3-paid`                         | Tencent Hy3                 | open-source  | yes | 262K   |
 | `tencent/Hy3`                              | Tencent Hy3 (Free)          | open-source  | yes | 262K   |
+| `tencent/hy4-preview`                      | Tencent Hy4 Preview         | open-source  | yes | 1M     |
 
 Full model list is maintained in [`models.json`](./models.json). Run `bun run sync` to refresh from the latest Command Code CLI release on npm.
 
